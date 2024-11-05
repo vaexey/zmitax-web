@@ -1,0 +1,7 @@
+{
+    "/baza": {
+        "target": "http://localhost:5613",
+        "secure": false,
+        "changeOrigin": true
+    }
+}
