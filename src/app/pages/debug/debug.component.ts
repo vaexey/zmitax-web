@@ -20,15 +20,15 @@ export class DebugComponent implements OnInit {
   subjectString = ""
 
   ngOnInit(): void {
-    this.zmitacState.getLoginState()
-      .subscribe(state => {
-        this.stateString = JSON.stringify(state, null, 4)
-      })
+    // this.zmitacState.getLoginState()
+    //   .subscribe(state => {
+    //     this.stateString = JSON.stringify(state, null, 4)
+    //   })
 
-    this.zmitacState.getSubjects()
-      .subscribe(subjects => {
-        this.subjectString = JSON.stringify(subjects, null, 4)
-      })
+    // this.zmitacState.getSubjects()
+    //   .subscribe(subjects => {
+    //     this.subjectString = JSON.stringify(subjects, null, 4)
+    //   })
   }
 
   login()

@@ -3,6 +3,7 @@ import { ZmitacStateService } from './zmitac-state.service';
 import { LoginState } from '../model/LoginState';
 import { Subject } from '../model/Subject';
 import { concatMap, map, Observable, of } from 'rxjs';
+import { Grades } from '../model/Grades';
 
 @Injectable({
   providedIn: 'root'
@@ -52,6 +53,12 @@ export class ZmitaxService {
 
         return data
       }))
+  }
+
+  // TODO: caching
+  getGrades(): Observable<Grades>
+  {
+    return this.zmitac.getGrades()
   }
 
   clear(): void

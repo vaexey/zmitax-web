@@ -1,1 +1,58 @@
-<p>nav-bar works!</p>
+<div class="nav">
+    <div class="logo">
+        <a routerLink="">
+            <!-- TODO: reduce logo asset size -->
+            <img src="/logo.jpg"/>
+        </a>
+    </div>
+    <div class="links">
+        @for(link of this.navEntries; track $index) {
+            @if(link.type === "link") {
+                <a [routerLink]="link.href">
+                    {{ link.label }}
+                </a>
+            }
+            @else if(link.type === "list") {
+                <div 
+                    (mouseenter)="link.hover = true"
+                    (mouseleave)="link.hover = false"
+                >
+                    <!-- TODO: dropdown icon  -->
+                    {{ link.label }}
+
+                    <div
+                        [className]="link.hover ? '' : 'hidden'"
+                    >
+                        <div style="height: 10px;"></div>
+
+                        @for(child of link.children; track $index) {
+                            <a [routerLink]="child.href">
+                                {{ child.label }}
+                            </a>
+                        }
+
+                        <div style="height: 10px;"></div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+    
+    @if(loginState) {
+        <div class="user">
+            <!-- TODO: user icon -->
+            <div class="img"></div>
+            <div class="title">
+                <span class="name">
+                    {{ this.loginState.user }}
+                </span>
+                <span class="major">
+                    {{ this.loginState.major }}
+                </span>
+                <span class="subject">
+                    {{ this.loginState.subject }}
+                </span>
+            </div>
+        </div>
+    }
+</div>

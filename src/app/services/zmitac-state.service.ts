@@ -3,6 +3,7 @@ import { RawZmitacService } from './raw-zmitac.service';
 import { map, Observable } from 'rxjs';
 import { LoginState } from '../model/LoginState';
 import { Subject } from '../model/Subject';
+import { Grades } from '../model/Grades';
 
 
 
@@ -27,6 +28,14 @@ const assertionRegex =
 const subjectRegex = 
   /<A {0,3}HREF="(st_changesubject1.php?.{0,70})" {0,3}>(.{0,30})<.{0,3}\/.{0,3}A.{0,3}>/g
 
+const gradesTableRegex =
+  /<TABLE *CELLPADDING.*?>(.)/s
+
+const gradesRowRegex =
+  /<TR>(.*?)<\/TR>/gs
+
+const gradesCellRegex =
+  /<(t[hd]) *[^<>]*?=?[^<>]*?>(.*?)<\/t[hd]>/gis
 
 @Injectable({
   providedIn: 'root'
@@ -145,6 +154,79 @@ export class ZmitacStateService {
     throw new Error("Could not detect whether logout was successful")
   }
 
+  private getArrayFromString(string: string): {tag: string, value: string}[][]
+  {
+    const tableMatch = gradesTableRegex.exec(string)
+
+    if(!tableMatch)
+    {
+      throw new Error("No grades table is present")
+    }
+
+    const tableIndex = tableMatch.index + tableMatch[0].length - tableMatch[1].length
+    const table = string.substring(tableIndex)
+
+    const lines = [...table.matchAll(gradesRowRegex)]
+
+    const rows = lines.map(line => {
+      const cells = [...line[1].matchAll(gradesCellRegex)]
+        .map(groups => {
+          return {
+            tag: groups[1].toLowerCase(),
+            value: groups[2]
+          }
+        })
+
+      return cells
+    })
+
+    return rows
+  }
+
+  private getGradesFromArray(array: {tag: string, value: string}[][]): Grades
+  {
+    array = [...array]
+
+    // TODO: verify header
+    const header = array.splice(0, 1)[0]
+    const footer = array.splice(-1)[0]
+
+    if(footer.length !== 4)
+    {
+      throw new Error("Unsupported grades table footer")
+    }
+
+    // TODO: verify footer tag types & number casting
+    const grades: Grades = {
+      list: [],
+      average: +footer[1].value,
+      total: +footer[3].value,
+    }
+
+    array.forEach(row => {
+      if(row.length === 7)
+      {
+        grades.list.push({
+          name: row[0].value,
+          terms: [
+            +row[1].value, // TODO: extract from <a> tag
+            +row[2].value, // TODO: remove if not present
+          ],
+          average: +row[3].value,
+          presence: row[4].value === "obecny",
+          report: row[5].value,
+          total: +row[6].value,
+        })
+
+        return
+      }
+      
+      throw new Error("Unsupported grades table cell count")
+    })
+
+    return grades
+  }
+
   getLoginState(): Observable<LoginState>
   {
     return this.rawZmitac.getGrades()
@@ -173,6 +255,15 @@ export class ZmitacStateService {
       lastname,
       password
     ).pipe(map(this.validateLoginRequest))
+  }
+
+  getGrades(): Observable<Grades>
+  {
+    return this.rawZmitac.getGrades()
+      .pipe(
+        map(this.getArrayFromString),
+        map(this.getGradesFromArray)
+      )
   }
 
   logout(): Observable<any>
